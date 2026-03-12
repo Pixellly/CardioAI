@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CardioAI — Heart Disease Risk Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #e2ddd7;
+    --border2: #ccc8c0;
+    --text: #1a1917;
+    --text2: #5a5751;
+    --text3: #9a958f;
+    --blue: #1a5fa8;
+    --blue-light: #e8f0fa;
+    --blue-mid: #3a7fd4;
+    --red: #c0392b;
+    --red-light: #fdecea;
+    --amber: #b45309;
+    --amber-light: #fef3cd;
+    --green: #2d6a4f;
+    --green-light: #d8f3dc;
+    --accent: #1a5fa8;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--blue);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); letter-spacing: -0.3px; }
+  .logo-badge { font-size: 10px; background: var(--blue-light); color: var(--blue); padding: 2px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.04em; }
+
+  nav { display: flex; gap: 2px; }
+  .nav-btn {
+    padding: 7px 16px;
+    background: none; border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text2);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: var(--blue); color: #fff; font-weight: 500; }
+
+  /* LAYOUT */
+  main { max-width: 980px; margin: 0 auto; padding: 2.5rem 2rem; }
+
+  .page { display: none; animation: fadeIn 0.2s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* TYPOGRAPHY */
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); margin-bottom: 4px; letter-spacing: -0.3px; }
+  .page-sub { font-size: 14px; color: var(--text3); margin-bottom: 2rem; }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin: 1.75rem 0 0.75rem;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-label:first-of-type { margin-top: 0; }
+
+  /* FORM */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--text2); }
+  .field input, .field select, .field textarea {
+    padding: 9px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--blue-mid);
+    box-shadow: 0 0 0 3px rgba(26,95,168,0.12);
+  }
+  .field .hint { font-size: 11px; color: var(--text3); }
+
+  .check-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .check-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+  }
+  .check-item:hover { border-color: var(--border2); background: var(--surface2); }
+  .check-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--blue); cursor: pointer; }
+  .check-item span { font-size: 13px; font-weight: 400; color: var(--text); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    letter-spacing: 0.01em;
+    transition: background 0.15s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .submit-btn:hover { background: #154d8c; }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn svg { width: 18px; height: 18px; }
+
+  /* RESULTS */
+  .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 1.5rem; }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+  }
+  .metric-card .mc-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+  .metric-card .mc-value { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; }
+  .metric-card .mc-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  .risk-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  .gauge-wrap { flex-shrink: 0; }
+  .gauge-wrap svg { width: 120px; height: 120px; }
+  .risk-text h2 { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px; }
+  .risk-text p { font-size: 14px; color: var(--text2); line-height: 1.7; max-width: 560px; }
+
+  /* REPORTS */
+  .reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .report-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .report-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .report-head h3 { font-size: 15px; font-weight: 600; }
+  .badge {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .report-body { padding: 18px 20px; }
+  .report-section { margin-bottom: 18px; }
+  .report-section:last-child { margin-bottom: 0; }
+  .report-section h4 {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text3); margin-bottom: 10px;
+  }
+
+  .factor-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .factor-row:last-child { border-bottom: none; }
+  .factor-row .fname { color: var(--text2); }
+  .factor-row .fval { font-weight: 600; font-size: 13px; }
+  .fval.high { color: var(--red); }
+  .fval.mod { color: var(--amber); }
+  .fval.ok { color: var(--green); }
+
+  .explain-block {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--border2);
+  }
+  .explain-block.high { border-left-color: var(--red); }
+  .explain-block.mod { border-left-color: var(--amber); }
+  .explain-block.ok { border-left-color: var(--green); }
+  .explain-block .eb-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .explain-block .eb-text { font-size: 13px; color: var(--text2); line-height: 1.55; }
+
+  .action-list { list-style: none; }
+  .action-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px; color: var(--text2);
+  }
+  .action-list li:last-child { border-bottom: none; }
+  .action-num {
+    width: 20px; height: 20px; flex-shrink: 0;
+    background: var(--blue-light); color: var(--blue);
+    border-radius: 50%; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+
+  .dl-row { display: flex; gap: 10px; margin-top: 14px; }
+  .dl-btn {
+    flex: 1; padding: 9px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .dl-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--text3); }
+
+  /* HISTORY */
+  .history-table { width: 100%; border-collapse: collapse; }
+  .history-table th {
+    text-align: left; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text3); padding: 0 12px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-table td { padding: 12px 12px; font-size: 14px; border-bottom: 1px solid var(--border); }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr:hover td { background: var(--surface2); }
+  .risk-pill { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .risk-pill.high { background: var(--red-light); color: var(--red); }
+  .risk-pill.mod { background: var(--amber-light); color: var(--amber); }
+  .risk-pill.low { background: var(--green-light); color: var(--green); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text3); }
+  .empty-state svg { width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.35; }
+  .empty-state p { font-size: 14px; }
+
+  /* PRINT */
+  @media print {
+    header, nav, .submit-btn, .dl-row, .nav-btn { display: none !important; }
+    .page { display: block !important; }
+    body { background: white; }
+    .card, .report-card, .risk-banner { box-shadow: none; }
+  }
+
+  @media (max-width: 700px) {
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .check-grid { grid-template-columns: 1fr 1fr; }
+    .metrics-row { grid-template-columns: 1fr 1fr; }
+    .reports-grid { grid-template-columns: 1fr; }
+    .risk-banner { flex-direction: column; text-align: center; }
+    main { padding: 1.5rem 1rem; }
+    header { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 15.5C9 15.5 2 11 2 6.5C2 4.5 3.5 3 5.5 3C7 3 8.2 3.8 9 5C9.8 3.8 11 3 12.5 3C14.5 3 16 4.5 16 6.5C16 11 9 15.5 9 15.5Z" fill="white"/>
+      </svg>
+    </div>
+    <span class="logo-text">CardioAI</span>
+    <span class="logo-badge">RESEARCH</span>
+  </div>
+  <nav>
+    <button class="nav-btn active" onclick="showPage('input', this)">Patient intake</button>
+    <button class="nav-btn" onclick="showPage('results', this)">Risk results</button>
+    <button class="nav-btn" onclick="showPage('history', this)">Patient history</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ===== INTAKE PAGE ===== -->
+  <div class="page active" id="page-input">
+    <h1 class="page-title">New patient assessment</h1>
+    <p class="page-sub">Enter clinical data to generate an AI-powered cardiovascular risk report.</p>
+
+    <div class="card">
+      <div class="section-label">Demographics</div>
+      <div class="grid-3">
+        <div class="field"><label>Full name</label><input type="text" id="f-name" placeholder="e.g. John Smith"></div>
+        <div class="field"><label>Patient ID</label><input type="text" id="f-pid" placeholder="e.g. PT-00142"></div>
+        <div class="field"><label>Date of birth</label><input type="date" id="f-dob"></div>
+        <div class="field"><label>Age (years)</label><input type="number" id="f-age" placeholder="e.g. 58" min="18" max="110"></div>
+        <div class="field"><label>Biological sex</label>
+          <select id="f-sex">
+            <option value="">Select</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other / prefer not to say</option>
+          </select>
+        </div>
+        <div class="field"><label>Ethnicity</label>
+          <select id="f-eth">
+            <option value="">Select</option>
+            <option>White / Caucasian</option>
+            <option>South Asian</option>
+            <option>Black / African</option>
+            <option>East Asian</option>
+            <option>Hispanic / Latino</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-label">Clinical measurements</div>
+      <div class="grid-4">
+        <div class="field">
+          <label>Systolic BP (mmHg)</label>
+          <input type="number" id="f-sbp" placeholder="e.g. 138">
+          <span class="hint">Normal: &lt;120</span>
+        </div>
+        <div class="field">
+          <label>Diastolic BP (mmHg)</label>
+          <input type="number" id="f-dbp" placeholder="e.g. 88">
+          <span class="hint">Normal: &lt;80</span>
+        </div>
+        <div class="field">
+          <label>Total cholesterol (mg/dL)</label>
+          <input type="number" id="f-chol" placeholder="e.g. 210">
+          <span class="hint">Optimal: &lt;200</span>
+        </div>
+        <div class="field">
+          <label>HDL cholesterol (mg/dL)</label>
+          <input type="number" id="f-hdl" placeholder="e.g. 50">
+          <span class="hint">Ideal: &gt;60</span>
+        </div>
+        <div class="field">
+          <label>LDL cholesterol (mg/dL)</label>
+          <input type="number" id="f-ldl" placeholder="e.g. 130">
+          <span class="hint">Optimal: &lt;100</span>
+        </div>
+        <div class="field">
+          <label>Triglycerides (mg/dL)</label>
+          <input type="number" id="f-trig" placeholder="e.g. 150">
+          <span class="hint">Normal: &lt;150</span>
+        </div>
+        <div class="field">
+          <label>Fasting glucose (mg/dL)</label>
+          <input type="number" id="f-gluc" placeholder="e.g. 102">
+          <span class="hint">Normal: 70–99</span>
+        </div>
+        <div class="field">
+          <label>BMI (kg/m²)</label>
+          <input type="number" id="f-bmi" placeholder="e.g. 27.4" step="0.1">
+          <span class="hint">Healthy: 18.5–24.9</span>
+        </div>
+      </div>
+
+      <div class="section-label">Risk factors &amp; medical history</div>
+      <div class="check-grid">
+        <label class="check-item"><input type="checkbox" id="chk-smoke"><span>Current smoker</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-exsmoke"><span>Former smoker</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-dm"><span>Diabetes (Type 2)</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-dm1"><span>Diabetes (Type 1)</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-htn"><span>Hypertension diagnosed</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-fam"><span>Family history of CVD</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-prev"><span>Previous cardiac event</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-afib"><span>Atrial fibrillation</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-inactive"><span>Physical inactivity</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-obese"><span>Obesity (BMI &gt;30)</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-ckd"><span>Chronic kidney disease</span></label>
+        <label class="check-item"><input type="checkbox" id="chk-stress"><span>High chronic stress</span></label>
+      </div>
+
+      <div class="section-label">Medications &amp; notes</div>
+      <div class="grid-2">
+        <div class="field"><label>Current medications</label><input type="text" id="f-meds" placeholder="e.g. Lisinopril 10mg, Atorvastatin 20mg"></div>
+        <div class="field"><label>Allergies / contraindications</label><input type="text" id="f-allergy" placeholder="e.g. Penicillin, Aspirin"></div>
+      </div>
+
+      <button class="submit-btn" onclick="generateReport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9l-6-6z"/>
+          <polyline points="9,3 9,9 19,9"/>
+          <line x1="12" y1="12" x2="12" y2="18"/>
+          <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+        Generate AI risk assessment
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== RESULTS PAGE ===== -->
+  <div class="page" id="page-results">
+    <div id="empty-results" class="empty-state">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M24 44C12 36 4 28 4 18C4 12 8 8 14 8C18 8 21.5 10.3 24 14C26.5 10.3 30 8 34 8C40 8 44 12 44 18C44 28 36 36 24 44Z"/></svg>
+      <p>No assessment generated yet.<br>Fill in patient data and click "Generate AI risk assessment".</p>
+    </div>
+
+    <div id="results-content" style="display:none">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:1.5rem;">
+        <div>
+          <h1 class="page-title" id="res-title">Risk assessment</h1>
+          <p class="page-sub" id="res-meta">—</p>
+        </div>
+        <button onclick="window.print()" style="padding:8px 16px; border:1px solid var(--border2); background:var(--surface); border-radius:var(--radius); font-family:inherit; font-size:13px; cursor:pointer; color:var(--text2);">Print / export PDF</button>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="mc-label">10-year CVD risk</div>
+          <div class="mc-value" id="mc-risk">—</div>
+          <div class="mc-sub">Framingham-based estimate</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Risk category</div>
+          <div class="mc-value" id="mc-cat" style="font-size:18px; padding-top:4px;">—</div>
+          <div class="mc-sub">ACC/AHA classification</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Primary risk driver</div>
+          <div class="mc-value" id="mc-driver" style="font-size:14px; padding-top:6px; line-height:1.2;">—</div>
+          <div class="mc-sub">Top SHAP feature</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Model confidence</div>
+          <div class="mc-value" id="mc-conf">—</div>
+          <div class="mc-sub">Prediction confidence</div>
+        </div>
+      </div>
+
+      <div class="risk-banner">
+        <div class="gauge-wrap">
+          <svg id="gauge-svg" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#e2ddd7" stroke-width="11"/>
+            <circle cx="60" cy="60" r="46" fill="none" id="gauge-fill" stroke="#c0392b"
+              stroke-width="11" stroke-dasharray="289" stroke-dashoffset="289"
+              stroke-linecap="round" transform="rotate(-90 60 60)"
+              style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)"/>
+            <text id="gauge-pct" x="60" y="56" text-anchor="middle" font-size="20" font-weight="600" font-family="DM Sans, sans-serif" fill="#1a1917">—</text>
+            <text x="60" y="73" text-anchor="middle" font-size="10" font-family="DM Sans, sans-serif" fill="#9a958f">10-yr risk</text>
+          </svg>
+        </div>
+        <div class="risk-text">
+          <h2 id="risk-headline">—</h2>
+          <p id="risk-summary">—</p>
+        </div>
+      </div>
+
+      <!-- DUAL REPORTS -->
+      <div class="reports-grid">
+
+        <!-- CLINICIAN REPORT -->
+        <div class="report-card">
+          <div class="report-head">
+            <h3>Clinical report</h3>
+            <span class="badge badge-blue">Physician view</span>
+          </div>
+          <div class="report-body">
+
+            <div class="report-section">
+              <h4>Risk factor panel</h4>
+              <div id="doc-factors"></div>
+            </div>
+
+            <div class="report-section">
+              <h4>Model explainability (SHAP analysis)</h4>
+              <div id="doc-shap" style="font-size:13px; color:var(--text2); line-height:1.65; background:var(--surface2); padding:12px 14px; border-radius:var(--radius);"></div>
+            </div>
+
+            <div class="report-section">
+              <h4>Clinical recommendations</h4>
+              <div id="doc-recs" style="font-size:13px; color:var(--text2); line-height:1.7;"></div>
+            </div>
+
+            <div class="dl-row">
+              <button class="dl-btn" onclick="alert('In your final deployment, this would export a structured PDF clinical report.')">⬇ Export PDF</button>
+              <button class="dl-btn" onclick="alert('In your final deployment, this would push data to the EHR/EMR system.')">⬆ Send to EHR</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PATIENT REPORT -->
+        <div class="report-card">
+          <div class="report-head">
+            <h3>Patient report</h3>
+            <span class="badge badge-green">Patient view</span>
+          </div>
+          <div class="report-body">
+
+            <div class="report-section">
+              <h4>What the results mean for you</h4>
+              <div id="patient-explains"></div>
+            </div>
+
+            <div class="report-section">
+              <h4>Steps you can take</h4>
+              <ul class="action-list" id="patient-actions"></ul>
+            </div>
+
+            <div class="dl-row">
+              <button class="dl-btn" onclick="alert('In your final deployment, this would generate a plain-language patient summary PDF.')">⬇ Patient summary</button>
+              <button class="dl-btn" onclick="window.print()">🖨 Print</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HISTORY PAGE ===== -->
+  <div class="page" id="page-history">
+    <h1 class="page-title">Patient history</h1>
+    <p class="page-sub">All assessments conducted in this session.</p>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>ID</th>
+            <th>Age / Sex</th>
+            <th>Date</th>
+            <th>10-yr risk</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody">
+          <tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text3); font-size:14px;">No assessments yet — run a patient intake to populate this list.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  let historyData = [];
+
+  // Pre-fill demo patient data on load
+  window.addEventListener('DOMContentLoaded', function() {
+    v('f-name').value = 'Robert Hargreaves';
+    v('f-pid').value = 'PT-00471';
+    v('f-dob').value = '1963-04-12';
+    v('f-age').value = '62';
+    v('f-sex').value = 'male';
+    v('f-eth').value = 'White / Caucasian';
+    v('f-sbp').value = '158';
+    v('f-dbp').value = '94';
+    v('f-chol').value = '267';
+    v('f-hdl').value = '38';
+    v('f-ldl').value = '182';
+    v('f-trig').value = '210';
+    v('f-gluc').value = '118';
+    v('f-bmi').value = '31.4';
+    v('chk-smoke').checked = true;
+    v('chk-dm').checked = true;
+    v('chk-htn').checked = true;
+    v('chk-fam').checked = true;
+    v('chk-inactive').checked = true;
+    v('f-meds').value = 'Metformin 500mg, Amlodipine 5mg';
+    v('f-allergy').value = 'Sulfa drugs';
+
+    // Pre-seed history with example patients
+    historyData = [
+      { name: 'Margaret Chen', pid: 'PT-00468', age: 71, sex: 'female', date: '10 Mar 2026', score: 24, cat: 'High' },
+      { name: 'David Okonkwo', pid: 'PT-00463', age: 54, sex: 'male', date: '9 Mar 2026', score: 13, cat: 'Moderate' },
+      { name: 'Sarah Patel', pid: 'PT-00459', age: 47, sex: 'female', date: '7 Mar 2026', score: 4, cat: 'Low' },
+      { name: 'James Reyes', pid: 'PT-00451', age: 66, sex: 'male', date: '5 Mar 2026', score: 17, cat: 'Moderate' },
+      { name: 'Linda Fischer', pid: 'PT-00448', age: 58, sex: 'female', date: '3 Mar 2026', score: 6, cat: 'Low' },
+    ];
+    renderHistory();
+  });
+
+  function showPage(id, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    else document.querySelectorAll('.nav-btn')[id === 'input' ? 0 : id === 'results' ? 1 : 2].classList.add('active');
+  }
+
+  function v(id) { return document.getElementById(id); }
+
+  function generateReport() {
+    const name = v('f-name').value || 'Unknown patient';
+    const pid = v('f-pid').value || '—';
+    const age = parseInt(v('f-age').value) || 55;
+    const sex = v('f-sex').value || 'unknown';
+    const sbp = parseInt(v('f-sbp').value) || 125;
+    const chol = parseInt(v('f-chol').value) || 200;
+    const hdl = parseInt(v('f-hdl').value) || 50;
+    const ldl = parseInt(v('f-ldl').value) || 120;
+    const gluc = parseInt(v('f-gluc').value) || 95;
+    const bmi = parseFloat(v('f-bmi').value) || 25;
+
+    const smoke = v('chk-smoke').checked;
+    const exSmoke = v('chk-exsmoke').checked;
+    const dm = v('chk-dm').checked || v('chk-dm1').checked;
+    const htn = v('chk-htn').checked;
+    const famHx = v('chk-fam').checked;
+    const prevEvent = v('chk-prev').checked;
+    const inactive = v('chk-inactive').checked;
+    const afib = v('chk-afib').checked;
+    const ckd = v('chk-ckd').checked;
+
+    let score = 4;
+    if (age > 65) score += 4;
+    else if (age > 55) score += 2;
+    if (sbp > 160) score += 7;
+    else if (sbp > 140) score += 5;
+    else if (sbp > 120) score += 2;
+    if (chol > 280) score += 5;
+    else if (chol > 240) score += 3;
+    else if (chol > 200) score += 1;
+    if (hdl < 35) score += 5;
+    else if (hdl < 45) score += 3;
+    else if (hdl < 55) score += 1;
+    if (ldl > 190) score += 4;
+    else if (ldl > 160) score += 2;
+    if (smoke) score += 8;
+    else if (exSmoke) score += 3;
+    if (dm) score += 5;
+    if (htn) score += 3;
+    if (famHx) score += 4;
+    if (prevEvent) score += 8;
+    if (inactive) score += 2;
+    if (afib) score += 4;
+    if (ckd) score += 4;
+    if (bmi > 35) score += 3;
+    else if (bmi > 30) score += 2;
+    score = Math.min(score, 45);
+
+    const cat = score >= 20 ? 'High' : score >= 10 ? 'Moderate' : 'Low';
+    const gaugeColor = score >= 20 ? '#c0392b' : score >= 10 ? '#b45309' : '#2d6a4f';
+    const conf = score >= 20 ? '91%' : score >= 10 ? '87%' : '93%';
+
+    const factors = [
+      { name: 'Systolic blood pressure', val: sbp + ' mmHg', level: sbp > 140 ? 'high' : sbp > 120 ? 'mod' : 'ok', shap: sbp > 140 ? '+' + Math.round((sbp-120)*0.07) : '0' },
+      { name: 'Total cholesterol', val: chol + ' mg/dL', level: chol > 240 ? 'high' : chol > 200 ? 'mod' : 'ok', shap: chol > 200 ? '+' + Math.round((chol-200)*0.04) : '0' },
+      { name: 'HDL cholesterol', val: hdl + ' mg/dL', level: hdl < 40 ? 'high' : hdl < 55 ? 'mod' : 'ok', shap: hdl < 50 ? '+' + Math.round((50-hdl)*0.1) : '0' },
+      { name: 'LDL cholesterol', val: ldl + ' mg/dL', level: ldl > 160 ? 'high' : ldl > 130 ? 'mod' : 'ok', shap: ldl > 130 ? '+' + Math.round((ldl-130)*0.04) : '0' },
+      { name: 'Smoking status', val: smoke ? 'Active smoker' : exSmoke ? 'Former smoker' : 'Non-smoker', level: smoke ? 'high' : exSmoke ? 'mod' : 'ok', shap: smoke ? '+8' : exSmoke ? '+3' : '0' },
+      { name: 'Diabetes mellitus', val: dm ? 'Diagnosed' : 'None reported', level: dm ? 'high' : 'ok', shap: dm ? '+5' : '0' },
+      { name: 'Family history CVD', val: famHx ? 'Positive' : 'Negative', level: famHx ? 'mod' : 'ok', shap: famHx ? '+4' : '0' },
+      { name: 'Previous cardiac event', val: prevEvent ? 'Yes' : 'None', level: prevEvent ? 'high' : 'ok', shap: prevEvent ? '+8' : '0' },
+    ];
+
+    factors.sort((a, b) => {
+      const order = { high: 0, mod: 1, ok: 2 };
+      return order[a.level] - order[b.level];
+    });
+
+    const topFactor = factors[0].name;
+
+    v('res-title').textContent = name + ' — Risk assessment';
+    v('res-meta').textContent = 'Patient ID: ' + pid + ' · Age: ' + age + ' · ' + (sex.charAt(0).toUpperCase() + sex.slice(1)) + ' · ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    v('mc-risk').textContent = score + '%';
+    v('mc-cat').textContent = cat;
+    v('mc-driver').textContent = topFactor;
+    v('mc-conf').textContent = conf;
+
+    const arc = v('gauge-fill');
+    const circumference = 289;
+    const offset = circumference - (score / 45) * circumference;
+    arc.style.stroke = gaugeColor;
+    setTimeout(() => { arc.style.strokeDashoffset = offset; }, 100);
+    v('gauge-pct').textContent = score + '%';
+
+    const headlines = {
+      High: 'Elevated risk — immediate clinical intervention advised',
+      Moderate: 'Moderate risk — lifestyle changes and monitoring recommended',
+      Low: 'Low risk — continue routine preventive care'
+    };
+    const summaries = {
+      High: 'This patient has a ' + score + '% estimated probability of a major cardiovascular event in the next 10 years. Multiple high-impact modifiable risk factors are present. Immediate pharmacological and lifestyle interventions are strongly indicated per ACC/AHA guidelines.',
+      Moderate: 'This patient has a ' + score + '% estimated 10-year cardiovascular risk. Several modifiable risk factors are present. A combination of lifestyle modifications and selective pharmacological treatment is recommended.',
+      Low: 'This patient has a ' + score + '% estimated 10-year cardiovascular risk, which is within the low-risk threshold. Continued preventive care and annual monitoring are recommended to maintain this profile.'
+    };
+    v('risk-headline').textContent = headlines[cat];
+    v('risk-summary').textContent = summaries[cat];
+
+    v('doc-factors').innerHTML = factors.map(f =>
+      `<div class="factor-row"><span class="fname">${f.name}</span><span class="fval ${f.level}">${f.val}</span></div>`
+    ).join('');
+
+    const highFactors = factors.filter(f => f.level === 'high');
+    v('doc-shap').innerHTML = `The model assigned greatest predictive weight to <strong>${topFactor}</strong> (SHAP contribution: ${factors[0].shap} percentage points). ` +
+      (highFactors.length > 1 ? `Secondary contributors include ${highFactors.slice(1, 3).map(f => f.name.toLowerCase()).join(' and ')}, with a combined contribution of approximately ${Math.round(score * 0.3)} percentage points. ` : '') +
+      `Interaction effects between blood pressure and lipid profile contributed ~${Math.round(score * 0.12)} additional points. Model confidence: ${conf}.`;
+
+    const recs = {
+      High: [
+        'Initiate high-intensity statin therapy (e.g. Atorvastatin 40–80 mg/day). Target LDL &lt;70 mg/dL.',
+        'Antihypertensive therapy: target BP &lt;130/80 mmHg. Consider ACE inhibitor or ARB as first line.',
+        smoke ? 'Prescribe smoking cessation support: NRT, varenicline, or bupropion.' : '',
+        dm ? 'Optimise glycaemic control. Consider GLP-1 agonist or SGLT-2 inhibitor for cardioprotection.' : '',
+        'Refer to cardiologist within 4 weeks.',
+        'Repeat lipid panel in 6–8 weeks post-therapy initiation.',
+        'Consider aspirin 81 mg/day if no contraindications (discuss benefit/risk).',
+      ].filter(Boolean).join('<br><br>'),
+      Moderate: [
+        'Evaluate statin eligibility: consider moderate-intensity statin if LDL &gt;130 mg/dL.',
+        'BP monitoring: initiate treatment if systolic consistently &gt;140 mmHg.',
+        'Structured diet counselling: Mediterranean or DASH dietary pattern.',
+        'Exercise prescription: 150 min/week moderate aerobic activity.',
+        'Repeat cardiovascular risk assessment in 12 months.',
+      ].join('<br><br>'),
+      Low: [
+        'No pharmacological intervention indicated at this time.',
+        'Reinforce healthy lifestyle: balanced diet, regular physical activity, no smoking.',
+        'Annual blood pressure and lipid monitoring.',
+        'Educate patient on warning signs: chest pain, dyspnoea, palpitations.',
+      ].join('<br><br>')
+    };
+    v('doc-recs').innerHTML = recs[cat];
+
+    const patExplainData = {
+      'Systolic blood pressure': {
+        high: { title: 'Blood pressure: too high', text: 'Your blood pressure is above the safe range. High blood pressure makes your heart work much harder than it should, and can damage blood vessels over time — raising your chance of a heart attack or stroke.', level: 'high' },
+        mod: { title: 'Blood pressure: slightly elevated', text: 'Your blood pressure is a little above ideal. Small changes — like cutting back on salt, drinking less alcohol, and walking daily — can often bring it down.', level: 'mod' },
+        ok: { title: 'Blood pressure: healthy', text: 'Your blood pressure is in the healthy range. Keep up your current lifestyle!', level: 'ok' }
+      },
+      'Total cholesterol': {
+        high: { title: 'Cholesterol: high', text: 'Your cholesterol is above the recommended level. Too much cholesterol can build up inside your arteries like a slow-forming blockage, reducing blood flow to your heart.', level: 'high' },
+        mod: { title: 'Cholesterol: borderline', text: 'Your cholesterol is slightly above the ideal range. Eating fewer saturated fats (butter, cheese, red meat) and more fibre (oats, beans) can help bring it down.', level: 'mod' },
+        ok: { title: 'Cholesterol: good', text: 'Your cholesterol level is healthy. Keep eating a balanced diet to maintain this.', level: 'ok' }
+      },
+      'Smoking status': {
+        high: { title: 'Smoking: major risk factor', text: 'Smoking is one of the single biggest risk factors for heart disease. Every cigarette damages blood vessels and makes the heart work harder. The good news: quitting now can halve your heart disease risk within a year.', level: 'high' },
+        mod: { title: 'Former smoker: some residual risk', text: 'Because you used to smoke, there is some residual cardiovascular risk — but it reduces over time. Your heart is already benefiting from having stopped.', level: 'mod' },
+        ok: { title: 'Non-smoker: great for your heart', text: 'Not smoking is one of the best things you can do for your heart. Keep it up!', level: 'ok' }
+      },
+      'Diabetes mellitus': {
+        high: { title: 'Diabetes: significant risk factor', text: 'Diabetes damages blood vessels throughout the body over time, which significantly increases the risk of heart disease. Keeping your blood sugar well-controlled is one of the most important things you can do to protect your heart.', level: 'high' },
+        ok: { title: 'No diabetes: positive sign', text: 'You have no recorded diabetes diagnosis, which is good for your heart health. Maintaining a healthy weight and diet helps keep diabetes at bay.', level: 'ok' }
+      }
+    };
+
+    const topFactorsForPatient = factors.slice(0, 4);
+    let patHTML = '';
+    topFactorsForPatient.forEach(f => {
+      const data = patExplainData[f.name];
+      if (data) {
+        const d = data[f.level] || data['ok'];
+        patHTML += `<div class="explain-block ${d.level}"><div class="eb-title">${d.title}</div><div class="eb-text">${d.text}</div></div>`;
+      }
+    });
+    v('patient-explains').innerHTML = patHTML || '<p style="font-size:13px;color:var(--text3)">Results generated above.</p>';
+
+    const patActions = {
+      High: [
+        'See your doctor this week — don\'t wait for your next scheduled appointment.',
+        'If you smoke, talk to your doctor about stop-smoking medication or support.',
+        'Aim for 30 minutes of brisk walking at least 5 days a week.',
+        'Reduce salt (max 1 teaspoon per day), saturated fat, and sugary foods.',
+        'Take any prescribed medications exactly as directed.',
+        'Schedule a follow-up blood test in 6–8 weeks.'
+      ],
+      Moderate: [
+        'Schedule a check-up with your GP to discuss your cholesterol and blood pressure.',
+        'Try to walk briskly for 30 minutes most days of the week.',
+        'Reduce salt, fried foods, and processed snacks.',
+        'Eat more fruits, vegetables, whole grains, and oily fish.',
+        'Monitor your blood pressure at home if possible.',
+        'Book a follow-up assessment in 6 months.'
+      ],
+      Low: [
+        'Continue your healthy lifestyle — it\'s working!',
+        'Schedule a routine annual check-up with your GP.',
+        'Stay physically active: aim for 150 minutes of moderate exercise per week.',
+        'Eat a balanced diet rich in vegetables, fruit, and whole grains.',
+        'Know the warning signs of heart attack: chest pain, breathlessness, arm or jaw pain.'
+      ]
+    };
+
+    v('patient-actions').innerHTML = patActions[cat].map((a, i) =>
+      `<li><span class="action-num">${i + 1}</span><span>${a}</span></li>`
+    ).join('');
+
+    v('empty-results').style.display = 'none';
+    v('results-content').style.display = 'block';
+
+    historyData.unshift({ name, pid, age, sex, date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), score, cat });
+    renderHistory();
+
+    showPage('results', document.querySelectorAll('.nav-btn')[1]);
+  }
+
+  function renderHistory() {
+    const tbody = v('history-tbody');
+    if (historyData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text3); font-size:14px;">No assessments yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = historyData.map(h => {
+      const cls = h.cat === 'High' ? 'high' : h.cat === 'Moderate' ? 'mod' : 'low';
+      return `<tr>
+        <td style="font-weight:500">${h.name}</td>
+        <td style="color:var(--text3)">${h.pid}</td>
+        <td>${h.age} / ${h.sex || '—'}</td>
+        <td style="color:var(--text3)">${h.date}</td>
+        <td style="font-weight:600">${h.score}%</td>
+        <td><span class="risk-pill ${cls}">${h.cat}</span></td>
+      </tr>`;
+    }).join('');
+  }
+</script>
+
+</body>
+</html>

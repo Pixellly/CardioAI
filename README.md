@@ -8,7 +8,9 @@
 
 ---
 ## 🌐 Live demo:
-[cardioai.github.io/YOUR_REPO_NAME](https://YOUR_USERNAME.github.io/YOUR_REPO_NAME)
+[cardioai.github.io/CardioAI](
+  https://pixellly.github.io/CardioAI/
+)
 
 ---
 
